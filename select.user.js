@@ -1,9 +1,9 @@
 // ==UserScript==
-// @name         CNMOOC 好大学在线选择题答题情况查看 Revived
-// @namespace    https://github.com/PhotonQuantum/cnmooc_select
-// @version      0.9
+// @name         CNMOOC 好大学在线选择题答题情况查看 Rebirth
+// @namespace    https://github.com/hans362/cnmooc_select
+// @version      1.0
 // @description  显示好大学在线测验与作业选择题回答情况
-// @author       fourstring, LightQuantum
+// @author       fourstring, LightQuantum, Hans362
 // @match        https://cnmooc.org/study/initplay/*
 // @match        https://cnmooc.org/examTest/stuExamList/*
 // @match        https://www.cnmooc.org/examTest/stuExamList/*
@@ -15,7 +15,7 @@
 
 (function () {
   "use strict";
-  var answers = [];
+  var answers = {};
   (function (open) {
     const re = /https:\/\/(|www.)cnmooc.org\/examSubmit\/\d*\/getExamPaper-\d*_\d*_\d*\.mooc/;
     XMLHttpRequest.prototype.open = function () {
@@ -26,10 +26,11 @@
             const parsed_json = JSON.parse(this.response);
             const quoted_answers = parsed_json.examSubmit.submitContent;
             const raw_answers = JSON.parse(quoted_answers);
-            answers = raw_answers.map((item) => {
+            raw_answers.forEach((item) => {
               const parsed_item = JSON.parse(item);
-              return parsed_item.errorFlag === "right";
+              answers[parsed_item.quizId.toString()] = parsed_item.errorFlag === "right";
             });
+            answers.length = raw_answers.length;
           }
         },
         false
@@ -51,16 +52,15 @@
     return tipsNode;
   }
   function checkErrorFlags() {
-    let zip = (rows) => rows[0].map((_, c) => rows.map((row) => row[c]));
     let problemsList = $("div.view-test.practice-item").toArray();
     if (problemsList.length == answers.length) {
-      zip([problemsList, answers]).map(([problem, answer]) => {
+      problemsList.map((problem) => {
         let currentProblemId = problem.getAttribute("id");
         if ($("div#" + currentProblemId + " a.selected").toArray().length > 0) {
           let addtionalTextArea = $(
             "div#" + currentProblemId + " div.test-attach"
           )[0];
-          addtionalTextArea.appendChild(createTipsNode(answer));
+          addtionalTextArea.appendChild(createTipsNode(answers[problem.getAttribute("quiz_id").toString()]));
         }
       });
     }
