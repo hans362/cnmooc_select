@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         CNMOOC 好大学在线选择题答题情况查看 Rebirth
 // @namespace    https://github.com/hans362/cnmooc_select
-// @version      1.0
+// @version      1.1
 // @description  显示好大学在线测验与作业选择题回答情况
 // @author       fourstring, LightQuantum, Hans362
 // @match        https://cnmooc.org/study/initplay/*
@@ -51,8 +51,16 @@
     }
     return tipsNode;
   }
+  function markAnswer(ok) {
+    if (ok) {
+      return "p-no done";
+    } else {
+      return "p-no error";
+    }
+  }
   function checkErrorFlags() {
     let problemsList = $("div.view-test.practice-item").toArray();
+    let circleList = $("a.p-no").toArray();
     if (problemsList.length == answers.length) {
       problemsList.map((problem) => {
         let currentProblemId = problem.getAttribute("id");
@@ -61,6 +69,8 @@
             "div#" + currentProblemId + " div.test-attach"
           )[0];
           addtionalTextArea.appendChild(createTipsNode(answers[problem.getAttribute("quiz_id").toString()]));
+          let circleId = parseInt($("span.test-no", problem).text());
+          circleList[circleId-1].setAttribute("class", markAnswer(answers[problem.getAttribute("quiz_id").toString()]));
         }
       });
     }
